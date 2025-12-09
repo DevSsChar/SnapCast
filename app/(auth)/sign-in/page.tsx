@@ -1,8 +1,13 @@
+"use client"
 // we moved here since the parallel pages with same name in same dir cant be there
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { authClient } from '@/lib/auth-client'
 const page = () => {
+    const handleSignIn= async ()=>{
+        return await authClient.signIn.social({provider: 'google'})
+    }
   return (
     <main className='sign-in'>
        <aside className='testimonial'>
@@ -36,7 +41,7 @@ const page = () => {
                 <Image src='/assets/icons/logo.svg' alt='Logo' width={40} height={40} />
                 <h1>Snapcast</h1></Link>
                 <p>Create & Share your very first <span>Snapcast Video</span> in no time</p>
-                <button>
+                <button onClick={handleSignIn}>
                     <Image src='/assets/icons/google.svg' alt='Google Sign-In' width={22} height={22} />
                     <span>Sign in with Google</span>
                 </button>
