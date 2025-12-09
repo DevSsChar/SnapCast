@@ -11,7 +11,7 @@ const header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
                     <div className='details'>
                         {/* // if there is an user image given then render it */}
                         {userImg && (
-                            <Image src={userImg || 'assets/icons/dummy.png'} alt={title} width={66} height={66} className='rounded-full' />
+                            <Image src={userImg} alt={title} width={66} height={66} className='rounded-full' />
                         )}
 
                         <article>
@@ -22,7 +22,7 @@ const header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
 
                     <aside>
                         <Link href='/upload'>
-                            <Image src='assets/icons/upload.svg' alt='Upload' width={16} height={16} />
+                            <Image src='/assets/icons/upload.svg' alt='Upload' width={16} height={16} />
                             <span>Upload a video</span>
                         </Link>
                         <div className='record'>
@@ -42,7 +42,7 @@ const header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
                         <Image src='/assets/icons/search.svg' alt="Search" width={16} height={16} />
                     </div>
 
-                    {'Dropdown list'}
+                    {'<Dropdown list />'}
                 </section>
             </header>
         </div>
