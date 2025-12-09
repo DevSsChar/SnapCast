@@ -1,0 +1,30 @@
+import { headers } from "next/headers"
+import Link from "next/link"
+import Image from "next/image"
+
+const User={}
+
+const navbar = () => {
+  return (
+    <header className="navbar">
+        <nav>
+            <Link href="/">
+            <Image src="/assets/icons/logo.svg" alt="Logo" width={50} height={50} />
+            </Link>
+
+            {User && (
+                <figure>
+                    <button>
+                        <Image src="/assets/icons/image.png" alt="User" width={36} height={36} className="rounded-full aspect-square"/>
+                    </button>
+                    <button className="cursor-pointer">
+                        <Image src="/assets/icons/logout.svg" alt="logout" width={24} height={24} className="rotate-180" />
+                    </button>
+                </figure>
+            )}
+        </nav>
+    </header>
+  )
+}
+
+export default navbar
