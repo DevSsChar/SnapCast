@@ -1,6 +1,7 @@
 import { ICONS } from '@/constants'
 import Image from 'next/image'
 import Link from 'next/link'
+import DropdownList from './DropdownList'
 // we need subheader,title,userImg props here since they are shared between
 // various components like video detail header and header in the home page
 const header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
@@ -42,7 +43,7 @@ const header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
                         <Image src='/assets/icons/search.svg' alt="Search" width={16} height={16} />
                     </div>
 
-                    {'<Dropdown list />'}
+                    <DropdownList />
                 </section>
             </header>
         </div>
