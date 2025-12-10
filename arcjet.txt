@@ -1,0 +1,10 @@
+1. Go to arcjet, create an account and login
+2. Create a new site and choose nextjs as framework
+3. load it using npm i @arcjet/next @arcjet/inspect
+4. add this to env ARCJET_KEY=ajkey_yourkey, copy from top
+5. we add arcjet.ts in lib to create single instance of arcjet object
+6. after this go to serveractions video.ts
+7. above server actions we create reusable validator function
+8. call the function in save video details with user id as fingerprint
+9. now to protect from bot attack, we go to middleware.ts and make validate there to prevent bot attacks
+10. at last we use it protect our auth, go to route.js of auth folders

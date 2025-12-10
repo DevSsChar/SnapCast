@@ -8,6 +8,8 @@ import { BUNNY } from "@/constants";
 import { db } from "@/drizzle/db";
 import { videos } from "@/drizzle/schema";
 import { revalidatePath } from "next/cache";
+import aj from "../arcjet";
+import { fixedWindow, request } from "@arcjet/next";
 
 // get necessary variables and constants
 const VIDEO_STREAM_BASE_URL = BUNNY.STREAM_BASE_URL;
@@ -31,6 +33,28 @@ const revalidatePaths=(paths:string[])=>{
     paths.forEach((path) => revalidatePath(path));
 }
 
+// fingerprint is something which allows us to connect who is the actor
+// we use arcjet for validations and rate limiting
+const validateWithArcjet = async (fingerprint: string) => {
+    // rules would have what kind of rate limiting we want
+    const ratelimit=aj.withRule(
+        fixedWindow({
+            mode: 'LIVE',
+            window: '1m', // 1 minute
+            max: 2, // max 2 requests per minute
+            characteristics: ['fingerprint'],
+        })
+    );
+    // make a typical request to arcjet to validate
+    const req=await request();
+    // decision to be used to allow or block request, we provide fingerprint and req
+    const decision=await ratelimit.protect(req,{fingerprint});
+
+    if(decision.isDenied())
+    {
+        throw new Error('Rate limit exceeded. Please try again later.');
+    }
+}
 // server functions
 // we wrap all in error handling one by one
 export const getVideoUploadUrl = withErrorHandling(async () => {
@@ -74,6 +98,8 @@ export const saveVideoDetails = withErrorHandling(async (
 ) => {
     const userId = await getSessionUserId();
     if (!userId) throw new Error("User ID not found");
+    // user id is given as fingerprint to identify actor
+    await validateWithArcjet(userId);
     // now we have all details to save video to our db
     // we will call our api route to save video details
     await apiFetch(
