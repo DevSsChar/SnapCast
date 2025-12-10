@@ -1,11 +1,34 @@
 'use client'
-import React, { ChangeEvent, useState, FormEvent } from 'react'
+import React, { ChangeEvent, useState, FormEvent, useEffect } from 'react'
 import FormField from '@/components/FormField';
 import FileInput from '@/components/FileInput';
 import { useFileInput } from '@/lib/hooks/useFileInput';
 import { MAX_THUMBNAIL_SIZE, MAX_VIDEO_SIZE } from '@/constants';
+import { getThumbnailUploadUrl, getVideoUploadUrl, saveVideoDetails } from '@/lib/actions/video';
+import { useRouter } from 'next/navigation';
+
+const uploadFileToBunny=(file:File, uploadUrl:string, accessKey:string)=>{
+     return fetch(uploadUrl,{
+        method: 'PUT',
+        headers: {
+            'AccessKey': accessKey,
+            'Content-Type': file.type,
+        },
+        body: file,
+     }).then((res)=>{
+        if(!res.ok)
+        {
+            throw new Error('Failed to upload file to Bunny CDN');
+        }
+        // return res;
+        });
+}
+
 const page = () => {
+    const router=useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [videoDuration, setvideoDuration] = useState(0);
+
     const [formData, setformData] = useState(({
           title: '',
           description: '',
@@ -14,6 +37,13 @@ const page = () => {
     // we will get video here, rn its empty, same for thumbnail
     const video=useFileInput(MAX_VIDEO_SIZE);
     const thumbnail=useFileInput(MAX_THUMBNAIL_SIZE);
+
+    useEffect(() => {
+        if(video.duration!=null || 0)
+        {
+            setvideoDuration(video.duration); 
+        }
+    }, [video.duration]);
 
     const [error, setError] = useState('');
 // The problem is that the ChangeEvent type is not specific enough and needs to be typed as ChangeEvent<HTMLInputElement> to access the name and value properties.
@@ -43,9 +73,37 @@ const page = () => {
             }
 
             //upload to bunny
-            // upload thumbhnail to db
+            // we need to get upload urls from our api routes, returns 3 things
+            const {
+                videoId,
+                uploadUrl: videoUploadUrl,
+                accessKey: videoAccessKey,
+            }=await getVideoUploadUrl();
+
+            if(!videoUploadUrl || !videoAccessKey) throw new Error('Failed to get video upload URL');
+            await uploadFileToBunny(video.file, videoUploadUrl, videoAccessKey);
+            // upload thumbhnail to db, we create function uploadFileTobunny
+            const {
+                uploadUrl: thumbnailUploadUrl,
+                accessKey: thumbnailAccessKey,
+                cdnUrl: thumbnailCdnUrl,
+            }=await getThumbnailUploadUrl(videoId);
+
+            if(!thumbnailUploadUrl || !thumbnailAccessKey || !thumbnailCdnUrl) throw new Error('Failed to get thumbnail upload URL');
             // attach thumbhnail
+            await uploadFileToBunny(thumbnail.file, thumbnailUploadUrl, thumbnailAccessKey);
             // create a new db entry for each video details (urls to data)
+            await saveVideoDetails({
+                // since it doesnt know the return type, put return type to bunny response in api fetch
+                videoId,
+                thumbnailUrl: thumbnailCdnUrl,
+                ...formData,
+                // create a state videoDuration
+                duration: videoDuration,
+            });
+ 
+            router.push(`/videos/${videoId}`);
+            // when video is uploaded we need to push it to video details page
         }catch(error)
         {
             console.log('Error uploading video:',error);

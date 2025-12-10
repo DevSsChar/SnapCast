@@ -1,0 +1,20 @@
+1. Make Bunny account 
+2. Go to storage zones and create a new storage zone called devs-snapcast
+3. Get the storage zone access key from the storage zone settings
+4. Set the BUNNY_STORAGE_ACCESS_KEY in the .env file
+5. Use the STORAGE_BASE_URL in constants/index.ts such that after https://hostname/username
+6. After this we need to make a pull zone which allow us to get thumbhnail url
+7. create a pull zone, set origin type to storage zone and select the created storage zone, for pricing zones select the nearest ones, also make a folder for thumbhnail
+8. copy the cdn url and set it in constants/index.ts like ,
+CDN_URL: "https://hostname-url"
+9. After storing the videos we also need to stream them, thus go to stream section and create a new library, set the name and zones
+10. After go to api section and copy the video library id and add to .env as BUNNY_LIBRARY_ID and api key as BUNNY_STREAM_ACCESS_KEY
+11. Copy cdn hostname from there and in constants/index.ts set TRANSCRIPT_URL: "https://cdn-hostname", rest stream base and embed url will remain same as before
+12. Go to transcribing section and turn it on, also enabl smart title and description and choose languages
+13. now we are ready to upload videos to bunnycdn
+14. npm install clsx tailwind-merge
+15. to make server actions allowing video uploads first create actions folder in lib
+16. Create new video schema in drizzle
+17. push the schema using npx drizzle-kit push
+18. Create the helper functions revalidatepath and all
+19. and then try using it in upload component
