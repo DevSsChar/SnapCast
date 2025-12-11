@@ -2,6 +2,7 @@ import { ICONS } from '@/constants'
 import Image from 'next/image'
 import Link from 'next/link'
 import DropdownList from './DropdownList'
+import RecordString from './RecordString'
 // we need subheader,title,userImg props here since they are shared between
 // various components like video detail header and header in the home page
 const header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
@@ -26,12 +27,7 @@ const header = ({ subHeader, title, userImg }: SharedHeaderProps) => {
                             <Image src='/assets/icons/upload.svg' alt='Upload' width={16} height={16} />
                             <span>Upload a video</span>
                         </Link>
-                        <div className='record'>
-                            <button className='primary-btn'>
-                                <Image src={ICONS.record} alt='record' width={16} height={16} />
-                                <span>Record a video</span>
-                            </button>
-                        </div>
+                        <RecordString />
                     </aside>
                 </section>
 

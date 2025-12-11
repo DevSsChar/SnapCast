@@ -45,6 +45,41 @@ const page = () => {
         }
     }, [video.duration]);
 
+    useEffect(()=>{
+        const checkForRecordedVideo=async()=>{
+            try{
+                const stored=sessionStorage.getItem('recordedVideo');
+                if(!stored) return;
+
+                const {url,name,type,duration}=JSON.parse(stored);
+                const blob = await fetch(url).then(res=>res.blob());
+                const file=new File([blob],name,{type, lastModified: Date.now()});
+
+                if(video.inputRef.current)
+                {
+                    const dataTransfer=new DataTransfer();
+                    dataTransfer.items.add(file);
+                    video.inputRef.current.files=dataTransfer.files;
+
+                    const event = new Event('change', { bubbles: true });
+                    video.inputRef.current.dispatchEvent(event);
+
+                    video.handleFileChange({
+                        target: {files: dataTransfer.files}
+                    } as ChangeEvent<HTMLInputElement>);
+                }
+
+                if(duration) setvideoDuration(duration);
+                sessionStorage.removeItem('recordedVideo');
+                URL.revokeObjectURL(url);
+            }catch(error)
+            {
+                console.error(error,'Error loading recorded video');
+            }
+        }
+        checkForRecordedVideo();
+    },[video])
+
     const [error, setError] = useState('');
 // The problem is that the ChangeEvent type is not specific enough and needs to be typed as ChangeEvent<HTMLInputElement> to access the name and value properties.
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -102,7 +137,7 @@ const page = () => {
                 duration: videoDuration,
             });
  
-            router.push(`/videos/${videoId}`);
+            router.push(`/`);
             // when video is uploaded we need to push it to video details page
         }catch(error)
         {
