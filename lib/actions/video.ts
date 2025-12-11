@@ -190,3 +190,10 @@ export const getAllVideos = withErrorHandling(async (
         }
     }
 });
+
+// to fetch a certain video by its id
+export const getVideoById = withErrorHandling(async (videoId: string) => {
+    const [videoRecord]=await buildVideoWithUserQuery().
+    where(eq(videos.id,videoId));
+    return videoRecord;
+})
