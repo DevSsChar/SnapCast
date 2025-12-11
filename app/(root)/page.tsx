@@ -1,27 +1,33 @@
-import React from 'react'
+import React, { use } from 'react'
 import Header from '@/components/header'
 import VideoCard from '@/components/VideoCard'
 import { dummyCards } from '@/constants'
-const Page = () => {
+import { getAllVideos } from '@/lib/actions/video'
+import EmptyState from '@/components/EmptyState'
+const Page = async ({searchParams}:SearchParams) => {
+  const {query,filter,page}=await searchParams;
+  const { videos,pagination}=await getAllVideos(
+    query,
+    filter,
+    Number(page) || 1,
+  );
   return (
     <main className='wrapper page'>
       <Header title='All Videos' subHeader='Public Library'/>
-      <section className="video-grid">
-                {dummyCards.map((card) => (
-                    <VideoCard {...card} key={card.id} />
-                ))}
-      </section>
-      {/* <VideoCard 
-      id='1'
-      title='Snapchat Message'
-      thumbnail='/assets/samples/thumbnail (1).png'
-      createdAt={new Date("2025-06-30 06:35:54.437")}
-      userImg='/assets/images/jason.png'
-      username='Jason'
-      views={10}
-      visibility='public'
-      duration={156}
-      /> */}
+      {videos.length>0 ? (
+          <section className='video-grid'>
+              {videos.map(({video,user})=>{
+                return <VideoCard key={video.id} 
+                {...video} 
+                thumbnail={video.thumbnailUrl}
+                userImg={user?.image || ''}
+                username={user?.name || 'Guest'}/>
+              })}
+          </section>
+      ):(
+        // we get empty state component here
+        <EmptyState icon="/assets/icons/video.svg" title="No Videos" description="There are no videos available at the moment."/>
+      )}
     </main>
   )
 }

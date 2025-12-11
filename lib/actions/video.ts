@@ -3,13 +3,14 @@
 
 import { headers } from "next/headers";
 import { auth } from "../auth";
-import { apiFetch, getEnv, withErrorHandling } from "../utils";
+import { apiFetch, doesTitleMatch, getEnv, getOrderByClause, withErrorHandling } from "../utils";
 import { BUNNY } from "@/constants";
 import { db } from "@/drizzle/db";
-import { videos } from "@/drizzle/schema";
+import { user, videos } from "@/drizzle/schema";
 import { revalidatePath } from "next/cache";
 import aj from "../arcjet";
 import { fixedWindow, request } from "@arcjet/next";
+import { and, eq, or, sql } from "drizzle-orm";
 
 // get necessary variables and constants
 const VIDEO_STREAM_BASE_URL = BUNNY.STREAM_BASE_URL;
@@ -31,6 +32,15 @@ const getSessionUserId = async (): Promise<string | null> => {
 }
 const revalidatePaths=(paths:string[])=>{
     paths.forEach((path) => revalidatePath(path));
+}
+const buildVideoWithUserQuery=()=>{
+    return db.select(
+        {
+            video: videos,
+            user: {id:user.id, name:user.name, image:user.image}
+        }
+    ).from(videos)
+    .leftJoin(user,eq(videos.userId,user.id));
 }
 
 // fingerprint is something which allows us to connect who is the actor
@@ -129,4 +139,54 @@ export const saveVideoDetails = withErrorHandling(async (
     revalidatePaths([`/`]);
 
     return {videoId: videoDetails.videoId}; 
+});
+
+// to fetch all the videos from the db, and this are the params which we can use to paginate the videos using query
+export const getAllVideos = withErrorHandling(async (
+    searchQuery: string='',
+    sortFilter?: string,
+    pageNumber: number=1,
+    pageSize: number=8
+) => {
+    const session=await auth.api.getSession({
+        headers: await headers()
+    })
+    const currentUserId=session?.user.id;
+    // include a fallback where if no session exists we only show public videos
+    const canSeeTheVideos=currentUserId
+        ? or(
+            eq(videos.visibility,'public'),
+            eq(videos.userId,currentUserId)
+        )
+        : eq(videos.visibility,'public');
+
+    const whereCondition=searchQuery.trim()
+    ? and(
+        canSeeTheVideos,
+        doesTitleMatch(videos,searchQuery)
+    ): canSeeTheVideos;
+
+    const [{totalcount}]=await db.select({totalcount: sql<number>`count(*)`})
+    .from(videos)
+    .where(whereCondition); 
+
+    const totalVideos=Number(totalcount || 0);
+    const totalPages=Math.ceil(totalVideos/pageSize);
+
+    const videoRecord=await buildVideoWithUserQuery().where(whereCondition).
+    orderBy(
+        sortFilter? getOrderByClause(sortFilter): sql`${videos.createdAt} DESC`
+    ).limit(pageSize)
+    // 
+    .offset((pageNumber-1)*pageSize);
+
+    return {
+        videos: videoRecord,
+        pagination: {
+            currentPage: pageNumber,
+            totalPages,
+            totalVideos,
+            pageSize
+        }
+    }
 });
